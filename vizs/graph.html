@@ -1,0 +1,22 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//unpkg.com/3d-force-graph"></script>
+<!--  <script src="3d-force-graph.js"></script>-->
+</head>
+
+<body>
+
+  <div id="3d-graph"></div>
+
+  <script>
+    const elem = document.getElementById('3d-graph');
+
+    const Graph = ForceGraph3D()(elem)
+      .jsonUrl('graph.json')
+      .nodeAutoColorBy('site')
+      .nodeLabel(node => `${node.site}`)
+      .onNodeHover(node => elem.style.cursor = node ? 'pointer' : null);
+      //.onNodeClick(node => window.open(`https://bl.ocks.org/${node.user}/${node.id}`, '_blank'));
+  </script>
+</body>

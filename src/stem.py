@@ -37,8 +37,11 @@ def stem_text(text):
     for sentence in sentences:
         word_lemma = {}
         doc = nlp(sentence)
-        doc2 = nlp2(sentence)
+        tokens = nltk.word_tokenize(sentence)
+        tokens = ' '.join(tokens)
+        doc2 = nlp2(tokens)
         entitiy_types = [(entity.label_, entity.text) for entity in doc2.ents]
+
         def stem_last(ner):
             ner = ner.strip().split()
             ner = [e.strip().title() for e in ner]

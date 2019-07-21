@@ -1,6 +1,9 @@
+import operator
 import json
 
 from tld import get_fld
+import networkx as nx
+import numpy as np
 import pandas as pd
 
 url_df = pd.read_csv('data/raw/urllist.csv', sep=',', encoding='utf-8')
@@ -85,18 +88,96 @@ for link in url_links:
 with open('data/processed/graph.json', 'w') as f:
     json.dump(dataset, f)
 
+G = nx.Graph()
+for node in nodes:
+    G.add_node(node, name=node)
+
+for e in url_links:
+    G.add_edge(e[0], e[1])
+
+pr = nx.algorithms.pagerank(G)
+values = sorted(set(pr.values()))
+quartiles = list(np.percentile(values, [25, 50, 75]))
+
+
+def get_group(url):
+    if pr[url] < quartiles[0]:
+        return "0"
+    elif quartiles[1] > pr[url] > quartiles[0]:
+        return "1"
+    elif quartiles[2] > pr[url] > quartiles[1]:
+        return "2"
+    else:
+        return "3"
+
+
 hivedata = []
 for node in nodes:
-    t = {}
-    t['name'] = node
-    t['imports'] = []
+    d = {}
+    d['name'] = node
+    d['size'] = pr[node]
+    group = get_group(node)
+    d['group'] = group
     connections = [e for e in url_links if node in e]
     connections = [item for t in connections for item in t if item != node]
     connections = set(connections)
+    d['imports'] = []
     for e in connections:
-        t['imports'].append(e)
-    t['size'] = len(connections)
-    hivedata.append(t)
+        d['imports'].append(e)
+    hivedata.append(d)
 
 with open('data/processed/hive.json', 'w') as f:
     json.dump(hivedata, f)
+
+forced = {}
+forced['nodes'] = []
+forced['links'] = []
+
+sorted_pr = sorted(pr.items(), key=lambda kv: kv[1], reverse=True)[:100]
+top_nodes = [e[0] for e in sorted_pr]
+for node in top_nodes:
+    d = {}
+    d['size'] = pr[node]
+    d['group'] = get_group(node)
+    d['id'] = node
+    forced['nodes'].append(d)
+
+for link in url_links:
+    if link[0] in top_nodes and link[1] in top_nodes:
+        d = {}
+        d['source'] = link[0]
+        d['target'] = link[1]
+        d['value'] = 1
+        forced['links'].append(d)
+
+with open('data/processed/force.json', 'w') as f:
+    json.dump(forced, f)
+
+G2 = nx.Graph()
+for node in nodes:
+    if int(get_group(node)) > 2:
+        G2.add_node(node, name=node)
+
+for e in url_links:
+    if int(get_group(e[0])) > 2 and int(get_group(e[1])) > 2:
+        G2.add_edge(e[0], e[1])
+
+nx.write_graphml(G2, 'data/processed/graph.graphml')
+
+base_counts = {}
+for k, v in url_base.items():
+    if v not in base_counts and v in nodes:
+        base_counts[v] = 1
+    else:
+        if v in nodes:
+            base_counts[v] += 1
+sorted_sites = sorted(base_counts.items(), key=lambda kv: kv[1], reverse=True)[:99]
+other = sum(list(base_counts.values())) - sum([e[1] for e in sorted_sites])
+sorted_sites.append(('Other', other))
+
+with open('data/processed/site_counts.tsv', 'w') as f:
+    h = 'site\tcount\n'
+    f.write(h)
+    for e in sorted_sites:
+        o = e[0] + '\t' + str(e[1]) + '\n'
+        f.write(o)

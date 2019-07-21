@@ -18,14 +18,14 @@ nlp = hu_core_ud_lg.load()
 nlp2 = spacy.load('models')
 tokenizer = nltk.tokenize.PunktSentenceTokenizer()
 
+#entities = []
+
 
 def startswithalpha(wd):
     if wd[0].isalpha():
         return True
     else:
         return False
-
-entites = []
 
 
 def stem_text(text):
@@ -41,6 +41,7 @@ def stem_text(text):
         tokens = ' '.join(tokens)
         doc2 = nlp2(tokens)
         entitiy_types = [(entity.label_, entity.text) for entity in doc2.ents]
+        del doc2
 
         def stem_last(ner):
             ner = ner.strip().split()
@@ -62,7 +63,9 @@ def stem_text(text):
         for token in doc:
             word_lemma[token.text] = token.lemma_
         entitiy_types = [(e[0], stem_last(e[1])) for e in entitiy_types]
+        #entities.append(entitiy_types)
         stemmed_sentence = [word.text for word in doc]
+        del doc
         stemmed_sentence = [wd for wd in stemmed_sentence if startswithalpha(
             wd)]
         stemmed_sentence = ' '.join(stemmed_sentence)
@@ -98,6 +101,6 @@ for t in texts:
 # with ProcessPoolExecutor(max_workers=2) as executor:
 #     executor.map(stem_text, texts)
 
-with open('data/interim/entities.p', 'wb') as outfile:
-    pickle.dump(entites, outfile)
+#with open('data/interim/entities.p', 'wb') as outfile:
+#    pickle.dumps(entities, outfile)
 

@@ -27,6 +27,10 @@ for url in urls:
             p = 'index.hu'
         if p.startswith('l.'):
             p = p[2:]
+        if p.startswith('goog.gl'):
+            p = 'google.com'
+        if p.startswith('youtu.be'):
+            p = 'youtube.com'
         url_base[url] = p
 
 print('checked urls')
@@ -156,7 +160,7 @@ with open('data/processed/force.json', 'w') as f:
 G2 = nx.Graph()
 for node in nodes:
     if int(get_group(node)) > 2:
-        G2.add_node(node, name=node)
+        G2.add_node(node, name=node, group=get_group(node))
 
 for e in url_links:
     if int(get_group(e[0])) > 2 and int(get_group(e[1])) > 2:

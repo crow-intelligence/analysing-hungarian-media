@@ -3,7 +3,6 @@ cimport numpy as np
 
 import math
 
-from bounter import bounter
 import numpy
 from scipy.sparse import csc_matrix
 

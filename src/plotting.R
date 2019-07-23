@@ -1,10 +1,10 @@
 library(ggplot2)
 library(ggthemes)
 
-df <- read.csv(file="/home/zoli/PycharmProjects/analysing-hungarian-media/data/processed/site_counts.tsv",
+df <- read.csv(file="/home/developer/PycharmProjects/journal_graphs/data/processed/site_counts.tsv",
                header = TRUE,
                sep="\t")
-df$site <- factor(df$site, levels = df$site[order(df$count)])
+df$site <- factor(df$site, levels = df$site[order(df$count,)])
 
 p<-ggplot(data=df, aes(x=site, y=count)) +
   theme_bw() +
